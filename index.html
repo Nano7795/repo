@@ -192,9 +192,44 @@
                 font-size: 0.9rem;
             }
         }
+        #custom-install-popup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  color: black;
+  padding: 15px 25px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+  z-index: 9999;
+  font-family: sans-serif;
+}
+
+#custom-install-popup .popup-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#custom-install-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
     </style>
 </head>
 <body>
+    <div id="custom-install-popup" style="display: none;">
+  <div class="popup-box">
+    <p>Install this app on your device</p>
+    <button id="custom-install-btn">Install</button>
+  </div>
+    </div>
     <div class="game-container">
         <h1>Number Puzzle Game</h1>
         <p class="subtitle">Arrange numbers in order</p>
@@ -423,36 +458,32 @@
             initializeGame();
         });
     </script>
-    
     <script>
   let deferredPrompt;
 
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Default prompt ko block karte hain
     e.preventDefault();
     deferredPrompt = e;
 
-    // Show your custom install button (if you want)
-    const installBtn = document.createElement("button");
-    installBtn.innerText = "Install App";
-    installBtn.style.padding = "10px 20px";
-    installBtn.style.fontSize = "18px";
-    installBtn.style.position = "fixed";
-    installBtn.style.bottom = "20px";
-    installBtn.style.left = "50%";
-    installBtn.style.transform = "translateX(-50%)";
-    installBtn.style.zIndex = "9999";
+    // Show popup after 2 seconds
+    setTimeout(() => {
+      const popup = document.getElementById("custom-install-popup");
+      popup.style.display = "block";
 
-    document.body.appendChild(installBtn);
+      // Auto hide after 10 seconds
+      setTimeout(() => {
+        popup.style.display = "none";
+      }, 10000);
+    }, 2000);
+  });
 
-    installBtn.addEventListener("click", async () => {
-      installBtn.remove(); // Hide button after click
-      deferredPrompt.prompt(); // Show browser install prompt
-
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to the install prompt: ${outcome}`);
-      deferredPrompt = null;
-    });
+  document.getElementById("custom-install-btn").addEventListener("click", async () => {
+    const popup = document.getElementById("custom-install-popup");
+    popup.style.display = "none";
+    deferredPrompt.prompt();
+    const choiceResult = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    console.log("User choice:", choiceResult.outcome);
   });
 </script>
 </body>
