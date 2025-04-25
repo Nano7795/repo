@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Puzzle Game</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .size-selector {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .size-btn {
+            padding: 6px 12px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .size-btn.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .puzzle-container {
+            display: grid;
+            gap: 5px;
+            margin: 15px 0;
+            width: 100%;
+            aspect-ratio: 1/1;
+        }
+
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .tile:active {
+            transform: scale(0.98);
+        }
+
+        .empty {
+            background: #ecf0f1;
+            cursor: default;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:active {
+            background: #27ae60;
+        }
+
+        .win-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .win-message.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .win-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 300px;
+            width: 100%;
+        }
+
+        .win-content h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2ecc71;
+        }
+
+        .win-stat {
+            margin: 8px 0;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+
+        @media (max-width: 350px) {
+            .size-btn {
+                padding: 5px 8px;
+                font-size: 0.8rem;
+            }
+            
+            button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        #install-box {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: #000;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  z-index: 9999;
+  font-family: 'Poppins', sans-serif;
+  width: 90%;
+  max-width: 380px;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.app-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  margin-right: 12px;
+}
+
+.text-section {
+  flex: 1;
+}
+
+.app-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.app-url {
+  font-size: 13px;
+  color: #555;
+}
+
+#install-btn {
+  padding: 6px 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+}
+    </style>
+</head>
+<body>
+<div id="install-box" style="display: none;">
+  <img src="icon1.png" alt="App Icon" class="app-icon">
+  <div class="text-section">
+    <div class="app-name">My Web App</div>
+    <div class="app-url">nano7795.github.io</div>
+  </div>
+  <button id="install-btn">Install</button>
+</div>
+    <div class="game-container">
+        <h1>Number Puzzle Game</h1>
+        <p class="subtitle">Arrange numbers in order</p>
+
+        <div class="size-selector">
+            <button class="size-btn" data-size="2">2×2</button>
+            <button class="size-btn active" data-size="3">3×3</button>
+            <button class="size-btn" data-size="4">4×4</button>
+            <button class="size-btn" data-size="5">5×5</button>
+            <button class="size-btn" data-size="6">6×6</button>
+            <button class="size-btn" data-size="7">7×7</button>
+            <button class="size-btn" data-size="8">8×8</button>
+            <button class="size-btn" data-size="9">9×9</button>
+            <button class="size-btn" data-size="10">10×10</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="timer">0</div>
+                <div>Seconds</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="moves">0</div>
+                <div>Moves</div>
+            </div>
+        </div>
+
+        <div class="puzzle-container" id="puzzle"></div>
+
+        <div class="controls">
+            <button id="shuffle-btn">Shuffle</button>
+        </div>
+    </div>
+
+    <div class="win-message" id="win-message">
+        <div class="win-content">
+            <h2>Congratulations!</h2>
+            <div class="win-stat">Solved <span id="win-size">3×3</span> puzzle</div>
+            <div class="win-stat">Time: <span id="win-time">0</span>s</div>
+            <div class="win-stat">Moves: <span id="win-moves">0</span></div>
+            <button id="play-again-btn" style="margin-top:15px;width:100%">Play Again</button>
+        </div>
+    </div>
+
+    <footer>Made with ❤️ by MCB</footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const puzzleContainer = document.getElementById('puzzle');
+            const shuffleBtn = document.getElementById('shuffle-btn');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const winMessage = document.getElementById('win-message');
+            const timerEl = document.getElementById('timer');
+            const movesEl = document.getElementById('moves');
+            const winTimeEl = document.getElementById('win-time');
+            const winMovesEl = document.getElementById('win-moves');
+            const winSizeEl = document.getElementById('win-size');
+            const sizeBtns = document.querySelectorAll('.size-btn');
+
+            let gridSize = 3;
+            let tiles = [];
+            let emptyIndex = 0;
+            let hasStarted = false;
+            let timer = null;
+            let seconds = 0;
+            let moves = 0;
+
+            function initializeGame() {
+                const totalTiles = gridSize * gridSize;
+                tiles = Array.from({length: totalTiles - 1}, (_, i) => i + 1);
+                tiles.push('');
+                emptyIndex = totalTiles - 1;
+                
+                puzzleContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+                puzzleContainer.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+                
+                resetStats();
+                initPuzzle();
+            }
+
+            function startTimer() {
+                if (!hasStarted) {
+                    hasStarted = true;
+                    timer = setInterval(() => {
+                        seconds++;
+                        timerEl.textContent = seconds;
+                    }, 1000);
+                }
+            }
+
+            function stopTimer() {
+                clearInterval(timer);
+                hasStarted = false;
+            }
+
+            function resetStats() {
+                stopTimer();
+                seconds = 0;
+                moves = 0;
+                timerEl.textContent = "0";
+                movesEl.textContent = "0";
+            }
+
+            function initPuzzle() {
+                puzzleContainer.innerHTML = '';
+
+                tiles.forEach((tile, index) => {
+                    const tileElement = document.createElement('div');
+                    tileElement.classList.add('tile');
+                    
+                    // Adjust font size based on grid size
+                    if (gridSize <= 4) {
+                        tileElement.style.fontSize = '1.5rem';
+                    } else if (gridSize === 5) {
+                        tileElement.style.fontSize = '1.2rem';
+                    } else {
+                        tileElement.style.fontSize = '1rem';
+                    }
+
+                    if (tile === '') {
+                        tileElement.classList.add('empty');
+                    } else {
+                        tileElement.textContent = tile;
+                        tileElement.addEventListener('click', () => {
+                            if (canMove(index)) {
+                                moveTile(index);
+                                startTimer();
+                                moves++;
+                                movesEl.textContent = moves;
+                                checkWin();
+                            }
+                        });
+                    }
+                    puzzleContainer.appendChild(tileElement);
+                });
+            }
+
+            function moveTile(index) {
+                [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+                emptyIndex = index;
+                initPuzzle();
+            }
+
+            function canMove(index) {
+                const row = Math.floor(index / gridSize);
+                const col = index % gridSize;
+                const emptyRow = Math.floor(emptyIndex / gridSize);
+                const emptyCol = emptyIndex % gridSize;
+
+                return (
+                    (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
+                    (Math.abs(col - emptyCol) === 1 && row === emptyRow)
+                );
+            }
+
+            function shuffle() {
+                resetStats();
+                let shuffleCount = 0;
+                const maxShuffles = gridSize * 50;
+
+                const shuffleInterval = setInterval(() => {
+                    if (shuffleCount >= maxShuffles) {
+                        clearInterval(shuffleInterval);
+                        return;
+                    }
+
+                    const movableTiles = [];
+                    for (let i = 0; i < tiles.length; i++) {
+                        if (i !== emptyIndex && canMove(i)) {
+                            movableTiles.push(i);
+                        }
+                    }
+
+                    if (movableTiles.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * movableTiles.length);
+                        const tileToMove = movableTiles[randomIndex];
+                        [tiles[tileToMove], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[tileToMove]];
+                        emptyIndex = tileToMove;
+                        initPuzzle();
+                        shuffleCount++;
+                    }
+                }, 20);
+            }
+
+            function showWinMessage() {
+                winTimeEl.textContent = seconds;
+                winMovesEl.textContent = moves;
+                winSizeEl.textContent = `${gridSize}×${gridSize}`;
+                winMessage.classList.add('show');
+            }
+
+            function hideWinMessage() {
+                winMessage.classList.remove('show');
+            }
+
+            function checkWin() {
+                const totalTiles = gridSize * gridSize;
+                const winningTiles = Array.from({length: totalTiles - 1}, (_, i) => i + 1);
+                winningTiles.push('');
+                
+                const isSolved = tiles.every((val, idx) => val === winningTiles[idx]);
+
+                if (isSolved && hasStarted) {
+                    stopTimer();
+                    setTimeout(showWinMessage, 300);
+                }
+            }
+
+            // Event listeners
+            shuffleBtn.addEventListener('click', shuffle);
+            playAgainBtn.addEventListener('click', () => {
+                hideWinMessage();
+                shuffle();
+            });
+
+            sizeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sizeBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    gridSize = parseInt(btn.dataset.size);
+                    initializeGame();
+                });
+            });
+
+            // Initialize the game
+            initializeGame();
+        });
+    </script>
+    
+    <script>
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Default prompt ko block karte hain
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show your custom install button (if you want)
+    const installBtn = document.createElement("button");
+    installBtn.innerText = "Install App";
+    installBtn.style.padding = "10px 20px";
+    installBtn.style.fontSize = "18px";
+    installBtn.style.position = "fixed";
+    installBtn.style.bottom = "20px";
+    installBtn.style.left = "50%";
+    installBtn.style.transform = "translateX(-50%)";
+    installBtn.style.zIndex = "9999";
+
+    document.body.appendChild(installBtn);
+
+    installBtn.addEventListener("click", async () => {
+      installBtn.remove(); // Hide button after click
+      deferredPrompt.prompt(); // Show browser install prompt
+
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to the install prompt: ${outcome}`);
+      deferredPrompt = null;
+    });
+  });
+</script>
+<script>
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    setTimeout(() => {
+      document.getElementById('install-box').style.display = 'flex';
+    }, 2000);
+
+    setTimeout(() => {
+      document.getElementById('install-box').style.display = 'none';
+    }, 12000);
+  });
+
+  document.getElementById('install-btn').addEventListener('click', async () => {
+    document.getElementById('install-box').style.display = 'none';
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    console.log('User response:', result.outcome);
+    deferredPrompt = null;
+  });
+</script>
+</body>
+</html>
